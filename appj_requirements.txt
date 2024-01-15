@@ -1,0 +1,12 @@
+matplotlib
+numpy
+scipy
+ipykernel
+seabreeze
+libusb1
+pyserial
+opencv-python
+pyvisa
+python-usbtmc
+pyusb
+crcmod
