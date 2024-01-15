@@ -1,12 +1,8 @@
-# Code for running APPJ experiments with silicon wafers
+# Code for running APPJ experiments
 
-This code was used for the open-loop collection of data from the atmospheric pressure plasma jet (APPJ) when using TEOS oxide silicon wafers as the substrate/surface material.
+This code was used for the open-loop collection of data from the atmospheric pressure plasma jet (APPJ).
 
 ## File Descriptions
-
-`ExperimentalData` contains all of the collected data and details of the settings for each sample are found in `OL_Settings.xlsx`. **This folder has been moved for ease of portability for this code. If the original data is needed, please contact `kchan45(at)berkeley.edu`**
-
-`images` contains a few example images of the APPJ during operation collecting data from the silicon wafers
 
 `utils` provides some general utilities for running experiments. Additional details regarding the files are detailed as follows:
 
