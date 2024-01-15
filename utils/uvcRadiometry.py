@@ -50,7 +50,7 @@ def raw_to_8bit(data):
 
 def display_temperature(img, val_k, loc, color):
   val = ktoc(val_k)
-  return val;
+  return val
   # cv2.putText(img,"{0:.1f} degC".format(val), loc, cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2)
   # x, y = loc
   # cv2.line(img, (x - 2, y), (x + 2, y), color, 1)

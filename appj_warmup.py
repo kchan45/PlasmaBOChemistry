@@ -7,7 +7,7 @@
 # the implemented algorithms and Seabreeze, os, serial, etc. for connection to
 # the experimental setup.
 #
-# Copyright (c) 2021 Mesbah Lab. All Rights Reserved.
+# Copyright (c) 2024 Mesbah Lab. All Rights Reserved.
 # Contributor(s): Kimberly Chan
 # Affiliation: University of California, Berkeley
 #
@@ -17,40 +17,18 @@
 ## import 3rd party packages
 import sys
 sys.dont_write_bytecode = True
-import numpy as np
-from seabreeze.spectrometers import Spectrometer, list_devices
 import time
-import os
 import serial
-import cv2
-import asyncio
 
 ## import user functions
 import utils.APPJPythonFunctions as appj
 from utils.APPJPythonFunctions import sendInputsArduino
-
-def close_instr(instr, dev, ctx, spec):
-    # print("terminated prematurely... closing instruments")
-    instr.close()
-    appj.closeThermalCamera(dev, ctx)
-    spec.close()
-    print("closed devices")
 
 
 ################################################################################
 ## Startup/prepare APPJ
 ################################################################################
 if __name__=="__main__":
-    # configure run options
-    runOpts = appj.RunOpts()
-    runOpts.collectData = False
-    runOpts.collectEntireSpectra = False
-    runOpts.collectOscMeas = False
-    runOpts.collectSpatialTemp = False
-    runOpts.saveSpectra = False
-    runOpts.saveOscMeas = False
-    runOpts.saveSpatialTemp = False
-    runOpts.tSampling = 0.5
 
     ## Set startup values
     dutyCycleIn = 100
@@ -63,42 +41,12 @@ if __name__=="__main__":
     print("Arduino Address:", arduinoAddress)
     arduinoPI = serial.Serial(arduinoAddress, baudrate=38400, timeout=1)
     s = time.time()
-    # # Oscilloscope
-    # oscilloscope = appj.Oscilloscope()       # Instantiate object from class
-    # instr = oscilloscope.initialize()	# Initialize oscilloscope
-    instr = None
-    # Spectrometer
-    devices = list_devices()
-    print(devices)
-    spec = Spectrometer(devices[0])
-    spec.integration_time_micros(12000*6)
-    # Thermal Camera
-    dev, ctx = appj.openThermalCamera()
-    print("Devices opened/connected to sucessfully!")
-
-    devices = {}
-    devices['arduinoPI'] = arduinoPI
-    devices['arduinoAddress'] = arduinoAddress
-    devices['instr'] = instr
-    devices['spec'] = spec
 
     # send startup inputs
     time.sleep(2)
     sendInputsArduino(arduinoPI, powerIn, flowIn, dutyCycleIn, arduinoAddress)
     time.sleep(2)
     input("Ensure plasma has ignited and press Return to begin.\n")
-
-    # ## Startup asynchronous measurement
-    # if os.name == 'nt':
-    #     ioloop = asyncio.ProactorEventLoop() # for subprocess' pipes on Windows
-    #     asyncio.set_event_loop(ioloop)
-    # else:
-    #     ioloop = asyncio.get_event_loop()
-    # # run once to initialize measurements
-    # prevTime = (time.time()-s)*1e3
-    # tasks, runTime = ioloop.run_until_complete(appj.async_measure(arduinoPI, prevTime, instr, spec, runOpts))
-    # print('measurement devices ready!')
-    # s = time.time()
 
     # let APPJ run for a bit
     time.sleep(2)
@@ -115,4 +63,3 @@ if __name__=="__main__":
     print("15 minutes have passed!")
 
     sendInputsArduino(arduinoPI, 0.0, 0.0, dutyCycleIn, arduinoAddress)
-    # close_instr(instr, dev, ctx, spec)

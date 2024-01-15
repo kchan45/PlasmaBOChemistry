@@ -23,7 +23,6 @@ from seabreeze.spectrometers import Spectrometer, list_devices
 import time
 import os
 import serial
-import cv2
 from datetime import datetime
 import asyncio
 # pickle import to save class data
