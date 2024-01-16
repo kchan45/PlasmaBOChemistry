@@ -35,10 +35,10 @@ class RunOpts():
         # save data options
         self.saveData = True # saves inputs and outputs to a file timeStamp_dataCollectionOL.csv
         self.saveSpatialTemp = True # saves spatial temperature values to a file timeStamp_dataCollectionSpatialTemps.csv
-        self.saveSpectra = True # saves entire spectrum at each sampling time to a file timeStamp_dataCollectionSpectra.csv
+        self.saveSpectra = True # saves entire spectrum at each sampling time to a file timeStamp_dataCollectionSpectra.npz
         self.saveOscMeas = True # saves oscilloscope measurements to a file timeStamp_dataCollectionOscilloscope.csv
         self.saveEmbMeas = True # saves embedded measurements to a file timeStamp_dataCollectionEmbedded.csv
-        self.saveEntireImage = True # saves the entire thermal image data to a file timeStamp_dataCollection.npy
+        self.saveEntireImage = True # saves the entire thermal image data to a file timeStamp_dataCollectionThermalImages.npz
 
         self.tSampling = 1.0
 

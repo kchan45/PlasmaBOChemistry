@@ -114,7 +114,7 @@ runOpts.collectSpatialTemp = False # option to collect spatial temperature (defi
 runOpts.saveSpectra = True
 runOpts.saveOscMeas = False
 runOpts.saveSpatialTemp = False # limited functionality
-runOpts.saveEntireImage = False # limited/no functionality
+runOpts.saveEntireImage = True
 
 runOpts.tSampling = ts # set the sampling time of the measurements
 

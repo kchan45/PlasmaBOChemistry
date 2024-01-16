@@ -187,6 +187,11 @@ class Experiment():
         if runOpts.saveSpatialTemp:
             Ts2save = np.empty((Niter,))
             Ts3save = np.empty((Niter,))
+        if runOpts.saveEntireImage:
+            raw_img0 = thermalCamOut[3]
+            raw_img_save = np.empty((Niter,*raw_img0.shape))
+            img0 = thermalCamOut[4]
+            img_save = np.empty((Niter, *img0.shape))
         if runOpts.saveSpectra:
             if specOut is not None:
                 waveSave = np.empty((Niter,len(specOut[2])))
@@ -222,6 +227,8 @@ class Experiment():
                 Ts = thermalCamMeasure[0]
                 Ts2 = thermalCamMeasure[1]
                 Ts3 = thermalCamMeasure[2]
+                raw_img = thermalCamMeasure[3]
+                img = thermalCamMeasure[4]
             else:
                 print('Temperature data not collected! Thermal Camera measurements will be set to -300.')
                 Ts = -300
@@ -249,6 +256,9 @@ class Experiment():
             if runOpts.saveSpatialTemp:
                 Ts2save[i] = Ts2
                 Ts3save[i] = Ts3
+            if runOpts.saveEntireImage:
+                raw_img_save[i,:,:] = raw_img
+                img_save[i,:,:] = img
             # Intensity spectra (row 1: wavelengths; row 2: intensities; row 3: mean value used to shift spectra)
             if runOpts.saveSpectra:
                 waveSave[i,:] = np.ravel(wavelengths)
@@ -296,6 +306,9 @@ class Experiment():
         if runOpts.collectSpatialTemp:
             exp_data['Ts2save'] = Ts2save
             exp_data['Ts3save'] = Ts3save
+        if runOpts.saveEntireImage:
+            exp_data['raw_img_save'] = raw_img_save
+            exp_data['img_save'] = img_save
         if runOpts.collectEntireSpectra:
             exp_data['waveSave'] = waveSave
             exp_data['specSave'] = specSave
@@ -359,6 +372,17 @@ def exp_data_saver(exp_data, saveDir, exp_name, runOpts):
         dataHeader = "Ts (degC),Ts2 (degC),Ts3 (degC)"
         saveArray = np.hstack((Tsave.reshape(-1,1), Ts2save.reshape(-1,1), Ts3save.reshape(-1,1)))
         np.savetxt( saveDir+exp_name+"_dataCollectionSpatialTemps.csv", saveArray, delimiter=",", header=dataHeader, comments='')
+
+    if runOpts.saveEntireImage:
+        # extract data
+        raw_img_save = exp_data['raw_img_save']
+        img_save = exp_data['img_save']
+        print("Whole thermal images are saved as n-dimensional NumPy arrays in a compressed .npz file.\n"
+              +"The arrays may be accessed by using `numpy.load(file_name)`, which returns a NpzFile object.\n"
+              +"The NpzFile object can be accessed similar to a dictionary. The keys used to save the full thermal images are:\n"
+              +"'raw_data' for the raw image before the `raw_to_8bit` function and 'img' for the image after the `raw_to_8bit` function.")
+
+        np.savez_compressed(saveDir+exp_name+"_dataCollectionThermalImages", raw_data=raw_img_save, img=img_save)
 
     if runOpts.saveSpectra:
         # extract data
