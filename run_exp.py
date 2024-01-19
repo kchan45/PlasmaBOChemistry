@@ -33,7 +33,10 @@ except ModuleNotFoundError:
 import argparse
 
 ## import user functions
-import utils.APPJPythonFunctions as appj
+from utils.run_options import RunOpts
+import utils.thermal_camera as tc_utils
+import utils.async_measurement as ameas
+import utils.arduino as ard_utils
 from utils.experiments import Experiment
 
 plot_data = True # [True/False] whether or not to plot the (2-input, 2-output) data after an experiment
@@ -105,7 +108,7 @@ print('Timestamp for save files: ', timeStamp)
 Nrep = 1
 
 # configure run options
-runOpts = appj.RunOpts()
+runOpts = RunOpts()
 runOpts.collectData = True      # option to collect two-input, two-output data (power, flow rate); (max surface temperature, total intensity)
 runOpts.collectEntireSpectra = True # option to collect full intensity spectra
 runOpts.collectOscMeas = False # option to collect oscilloscope measurements (not functioning)
@@ -135,7 +138,7 @@ print(saveDir)
 
 ## connect to/open connection to devices in setup
 # Arduino
-arduinoAddress = appj.getArduinoAddress(os="ubuntu")
+arduinoAddress = ard_utils.getArduinoAddress(os="ubuntu")
 print("Arduino Address: ", arduinoAddress) 
 arduinoPI = serial.Serial(arduinoAddress, baudrate=38400, timeout=1)
 s = time.time()
@@ -149,7 +152,7 @@ print(devices)
 spec = Spectrometer(devices[0])
 spec.integration_time_micros(int_time_treat) ## change integration time (units of microseconds)
 # Thermal Camera
-dev, ctx = appj.openThermalCamera()
+dev, ctx = tc_utils.openThermalCamera()
 print("Devices opened/connected to sucessfully!")
 
 devices = {}
@@ -160,7 +163,7 @@ devices['spec'] = spec
 
 # send startup inputs
 time.sleep(2)
-appj.sendInputsArduino(arduinoPI, powerIn, flowIn, dutyCycleIn, arduinoAddress)
+ard_utils.sendInputsArduino(arduinoPI, powerIn, flowIn, dutyCycleIn, arduinoAddress)
 input("Ensure plasma has ignited and press Return to begin.\n")
 
 ## Startup asynchronous measurement
@@ -171,13 +174,13 @@ else:
     ioloop = asyncio.get_event_loop()
 # run once to initialize measurements
 prevTime = (time.time()-s)*1e3
-tasks, runTime = ioloop.run_until_complete(appj.async_measure(arduinoPI, prevTime, instr, spec, runOpts))
+tasks, runTime = ioloop.run_until_complete(ameas.async_measure(arduinoPI, prevTime, instr, spec, runOpts))
 print('measurement devices ready!')
 s = time.time()
 
 prevTime = (time.time()-s)*1e3
 # get initial measurements
-tasks, runTime = ioloop.run_until_complete(appj.async_measure(arduinoPI, prevTime, instr, spec, runOpts))
+tasks, runTime = ioloop.run_until_complete(ameas.async_measure(arduinoPI, prevTime, instr, spec, runOpts))
 if runOpts.collectData:
     thermalCamOut = tasks[0].result()
     Ts0 = thermalCamOut[0]
@@ -230,7 +233,7 @@ arduinoPI = serial.Serial(arduinoAddress, baudrate=38400, timeout=1)
 devices['arduinoPI'] = arduinoPI
 
 # turn off plasma jet (programmatically)
-appj.sendInputsArduino(arduinoPI, 0.0, 0.0, dutyCycleIn, arduinoAddress)
+ard_utils.sendInputsArduino(arduinoPI, 0.0, 0.0, dutyCycleIn, arduinoAddress)
 arduinoPI.close()
 
 if plot_data:
