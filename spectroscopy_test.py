@@ -4,7 +4,6 @@ from seabreeze.spectrometers import Spectrometer, list_devices
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from utils.APPJPythonFunctions import*
 print('\n--------------------------------')
 
 # Check that the number of arguments is correct
