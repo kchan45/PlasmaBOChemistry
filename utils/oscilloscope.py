@@ -398,13 +398,14 @@ class Oscilloscope():
 
         print(f"Timebase set! The time interval between samples will be {self.timeIntervalns} ns.")
 
-    def initialize_streaming(self):
+    def initialize_streaming(self, sInterval=250):
         '''
         function to start the streaming process; should be called each time you
         want to stream values from the oscilloscope
         '''
         # Begin streaming mode:
-        sampleInterval = ctypes.c_int32(250)
+        # sampleInterval = ctypes.c_int32(sInterval)
+        sampleInterval = ctypes.c_int32(100)
         sampleUnits = ps.PS2000A_TIME_UNITS['PS2000A_US']
         # We are not triggering:
         maxPreTriggerSamples = 0
