@@ -21,9 +21,7 @@ import time
 import serial
 
 ## import user functions
-import utils.APPJPythonFunctions as appj
-from utils.APPJPythonFunctions import sendInputsArduino
-
+import utils.arduino as ard
 
 ################################################################################
 ## Startup/prepare APPJ
@@ -37,21 +35,21 @@ if __name__=="__main__":
 
     ## connect to/open connection to devices in setup
     # Arduino
-    arduinoAddress = appj.getArduinoAddress(os="ubuntu")
+    arduinoAddress = ard.getArduinoAddress(os="ubuntu")
     print("Arduino Address:", arduinoAddress)
     arduinoPI = serial.Serial(arduinoAddress, baudrate=38400, timeout=1)
     s = time.time()
 
     # send startup inputs
     time.sleep(2)
-    sendInputsArduino(arduinoPI, powerIn, flowIn, dutyCycleIn, arduinoAddress)
+    ard.sendInputsArduino(arduinoPI, powerIn, flowIn, dutyCycleIn, arduinoAddress)
     time.sleep(2)
     input("Ensure plasma has ignited and press Return to begin.\n")
 
     # let APPJ run for a bit
     time.sleep(2)
-    sendInputsArduino(arduinoPI, 2.0, 1.5, dutyCycleIn, arduinoAddress)
-    sendInputsArduino(arduinoPI, 2.0, 1.5, dutyCycleIn, arduinoAddress)
+    ard.sendInputsArduino(arduinoPI, 2.0, 1.5, dutyCycleIn, arduinoAddress)
+    ard.sendInputsArduino(arduinoPI, 2.0, 1.5, dutyCycleIn, arduinoAddress)
     time.sleep(2)
 
     print("Waiting 15 minutes to warm up the plasma jet...\n")
@@ -62,4 +60,4 @@ if __name__=="__main__":
     time.sleep(60*5)
     print("15 minutes have passed!")
 
-    sendInputsArduino(arduinoPI, 0.0, 0.0, dutyCycleIn, arduinoAddress)
+    ard.sendInputsArduino(arduinoPI, 0.0, 0.0, dutyCycleIn, arduinoAddress)

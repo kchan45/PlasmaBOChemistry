@@ -22,7 +22,9 @@ from datetime import datetime
 import os
 
 ## import user functions
-import utils.APPJPythonFunctions as appj
+from utils.run_options import RunOpts
+import utils.async_measurement as ameas
+import utils.arduino as ard
 
 def ctok(T):
     """
@@ -104,7 +106,7 @@ class Experiment():
 
     def run_open_loop(self, ioloop,
                         power_seq=None, flow_seq=None,
-                        runOpts=appj.RunOpts(), devices=None,
+                        runOpts=RunOpts(), devices=None,
                         prevTime=0.0, opt_dict=None):
         """
         This method runs a open-loop experiment of the APPJ using provided
@@ -171,7 +173,7 @@ class Experiment():
                 print(f'WARNING: {key} not in devices dict! Code will error...')
 
         # initial measurement to get data sizes
-        tasks, runTime = ioloop.run_until_complete(appj.async_measure(arduinoPI, prevTime, instr, spec, runOpts))
+        tasks, runTime = ioloop.run_until_complete(ameas.async_measure(arduinoPI, prevTime, instr, spec, runOpts))
         thermalCamOut = tasks[0].result()
         Ts0 = thermalCamOut[0]
         specOut = tasks[1].result()
@@ -219,7 +221,7 @@ class Experiment():
             print(f'\nIteration {i} out of {Niter}')
 
             # asynchronous measurement
-            tasks, _ = ioloop.run_until_complete(appj.async_measure(arduinoPI, prevTime, instr, spec, runOpts))
+            tasks, _ = ioloop.run_until_complete(ameas.async_measure(arduinoPI, prevTime, instr, spec, runOpts))
 
             # Temperature
             thermalCamMeasure = tasks[0].result()
@@ -277,8 +279,8 @@ class Experiment():
             print(f'Measured Outputs: Temperature: {Ts:.2f}, Intensity: {totalIntensity:.2f}\n')
 
             # Send inputs <--- takes at least 0.15 seconds (due to programmed pauses)
-            # appj.sendInputsArduino(arduinoPI, power_seq[i], flow_seq[i], dutyCycle, arduinoAddress)
-            appj.sendControlledInputsArduino(arduinoPI, float(power_seq[i]), float(flow_seq[i]), arduinoAddress)
+            # ard.sendInputsArduino(arduinoPI, power_seq[i], flow_seq[i], dutyCycle, arduinoAddress)
+            ard.sendControlledInputsArduino(arduinoPI, float(power_seq[i]), float(flow_seq[i]), arduinoAddress)
 
             # Pause for the duration of the sampling time to allow the system to evolve
             endTime = time.time()
@@ -294,7 +296,7 @@ class Experiment():
                     badTimes += [i]
 
         # shut off APPJ
-        appj.sendInputsArduino(arduinoPI, 0.0, 0.0, 100.0, arduinoAddress)
+        ard.sendInputsArduino(arduinoPI, 0.0, 0.0, 100.0, arduinoAddress)
 
         # create dictionary of experimental data
         exp_data = {}
