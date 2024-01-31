@@ -22,6 +22,7 @@ import time
 from datetime import datetime
 import os
 import json
+import h5py
 
 ## import user functions
 from utils.run_options import RunOpts
@@ -208,9 +209,14 @@ class Experiment:
             Ts3save = np.empty((Niter,))
         if runOpts.saveEntireImage:
             raw_img0 = thermalCamOut[3]
-            gray_img = np.mean(raw_img0, axis=-1)
-            raw_img_save = np.empty((Niter, *gray_img.shape), dtype=np.uint8)
-            print(raw_img_save.shape)
+            # gray_img = np.mean(raw_img0, axis=-1)
+            # raw_img_save = np.empty((Niter, *gray_img.shape), dtype=np.uint8)
+            mmap_opts = {"dtype": np.uint8, "shape": (Niter, *raw_img0.shape)}
+            raw_img_save = np.memmap(
+                self.backupSaveDir + "tmp_img_data.dat",
+                mode="w+",
+                **mmap_opts,
+            )
         if runOpts.saveSpectra:
             if specOut is not None:
                 waveSave = np.empty((Niter, len(specOut[2])))
@@ -224,7 +230,9 @@ class Experiment:
         if runOpts.saveOscMeas:
             if oscOut is not None:
                 n_channels = len(oscOut[1])
-                oscSave = [np.empty((Niter + 1, len(oscOut[0]))) for _ in range(n_channels)]
+                oscSave = [
+                    np.empty((Niter + 1, len(oscOut[0]))) for _ in range(n_channels)
+                ]
                 print(oscSave[0].shape)
             else:
                 print("Oscilloscope data not collected! Nothing to save.")
@@ -284,7 +292,12 @@ class Experiment:
                 Ts2save[i] = Ts2
                 Ts3save[i] = Ts3
             if runOpts.saveEntireImage:
-                raw_img_save[i, :, :] = raw_img
+                if len(raw_img.shape) == 2:
+                    raw_img_save[i, :, :] = raw_img
+                    raw_img_save.flush()
+                elif len(raw_img.shape) == 3:
+                    raw_img_save[i, :, :, :] = raw_img
+                    raw_img_save.flush()
             # Intensity spectra (row 1: wavelengths; row 2: intensities; row 3: mean value used to shift spectra)
             if runOpts.saveSpectra:
                 waveSave[i, :] = np.ravel(wavelengths)
@@ -342,7 +355,8 @@ class Experiment:
             exp_data["Ts2save"] = Ts2save.tolist()
             exp_data["Ts3save"] = Ts3save.tolist()
         if runOpts.saveEntireImage:
-            exp_data["raw_img_save"] = raw_img_save.tolist()
+            exp_data["raw_img_save_dat_file"] = self.backupSaveDir + "tmp_img_data.dat"
+            exp_data["mmap_opts"] = mmap_opts
         if runOpts.collectEntireSpectra:
             exp_data["waveSave"] = waveSave.tolist()
             exp_data["specSave"] = specSave.tolist()
@@ -354,11 +368,15 @@ class Experiment:
         if opt_dict is not None:
             exp_data["opt_dict"] = opt_dict
 
-        # # save experimental data dictionary as json to have a backup copy
-        # self.exp_data = exp_data
-        # with open(self.backupSaveDir+"OL_data_"+str(self.ol_count)+".json", 'w') as fp:
-        #     json.dump(exp_data, fp)
-        # print("saved JSON")
+        del raw_img_save  # flush memory changes
+
+        # save experimental data dictionary as json to have a backup copy
+        self.exp_data = exp_data
+        with open(
+            self.backupSaveDir + "OL_data_" + str(self.ol_count) + ".json", "w"
+        ) as fp:
+            json.dump(exp_data, fp)
+        print("saved JSON")
 
         # save separate files of each type of experimental data
         exp_saveDir = self.saveDir
@@ -436,19 +454,34 @@ def exp_data_saver(exp_data, saveDir, exp_name, runOpts):
 
     if runOpts.saveEntireImage:
         # extract data
-        raw_img_save = np.array(exp_data["raw_img_save"])
-        print(
-            "Whole thermal images are saved as n-dimensional NumPy arrays in a compressed .npz file.\n"
-            + "The arrays may be accessed by using `numpy.load(file_name)`, which returns a NpzFile object.\n"
-            + "The NpzFile object can be accessed similar to a dictionary. The key used to save the full thermal images are:\n"
-            + "'raw_data' for the raw image before the `raw_to_8bit` function."
-        )
+        raw_img_save_file = exp_data["raw_img_save_dat_file"]
+        mmap_opts = exp_data["mmap_opts"]
+        raw_img_save = np.memmap(raw_img_save_file, mode="r+", **mmap_opts)
+        n_images = mmap_opts["shape"][0]
+        if not os.path.exists(saveDir + exp_name + f"/thermal_images"):
+            os.makedirs(saveDir + exp_name + f"/thermal_images", exist_ok=True)
+        for i in range(n_images):
+            with h5py.File(
+                saveDir + exp_name + f"/thermal_images/iter{i}.h5", "w"
+            ) as f:
+                dataset = f.create_dataset(
+                    "image",
+                    mmap_opts["shape"][1:],
+                    h5py.h5t.STD_U8BE,
+                    data=raw_img_save[i],
+                )
+        # print(
+        #     "Whole thermal images are saved as n-dimensional NumPy arrays in a compressed .npz file.\n"
+        #     + "The arrays may be accessed by using `numpy.load(file_name)`, which returns a NpzFile object.\n"
+        #     + "The NpzFile object can be accessed similar to a dictionary. The key used to save the full thermal images are:\n"
+        #     + "'raw_data' for the raw image before the `raw_to_8bit` function."
+        # )
 
-        np.savez_compressed(
-            saveDir + exp_name + "_dataCollectionThermalImages",
-            raw_data=raw_img_save,
-        )
-        print("saved thermal image data")
+        # np.savez_compressed(
+        #     saveDir + exp_name + "_dataCollectionThermalImages",
+        #     raw_data=raw_img_save,
+        # )
+        # print("saved thermal image data")
 
     if runOpts.saveSpectra:
         # extract data
