@@ -55,7 +55,7 @@ q_max_default = 6.25  # max flow setting for the treatment in standard liters pe
 q_min_default = 2.0  # min flow setting for the treatment in standard liters per minute (SLM)
 dist_treat_default = 5.0  # jet-to-substrate distance in mm
 int_time_default = 12000 * 6  # integration time for spectrometer measurement in microseconds
-ts_default = 1.0  # sampling time to take measurements in seconds
+ts_default = 0.4  # sampling time to take measurements in seconds
 # NOTE: sampling time should be greater than integration time by roughly double
 
 ################################################################################
@@ -281,8 +281,8 @@ s = time.time()
 ## Begin Experiment:
 ################################################################################
 # create input sequences
-uvec1 = np.arange(start=P_min, stop=P_max, step=0.25)  # for power
-uvec2 = np.arange(start=q_min, stop=q_max, step=0.25)  # for flow rate
+uvec1 = np.arange(start=P_min, stop=P_max, step=0.5)  # for power
+uvec2 = np.arange(start=q_min, stop=q_max, step=0.5)  # for flow rate
 uu1, uu2 = np.meshgrid(uvec1, uvec2)
 uvec1 = uu1.reshape(-1,)
 uvec2 = uu2.reshape(-1,)
@@ -298,8 +298,6 @@ qseq = np.insert(qseq, 0, [0.0, q_nom, q_nom, q_nom])
 print(pseq)
 print(qseq)
 n_steps = int(step_length / runOpts.tSampling)
-pseq = [0.0, 2.0]
-qseq = [0.0, 2.0]
 
 pseq = np.repeat(pseq, n_steps).reshape(-1,)
 qseq = np.repeat(qseq, n_steps).reshape(-1,)

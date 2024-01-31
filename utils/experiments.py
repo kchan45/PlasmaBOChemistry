@@ -208,7 +208,8 @@ class Experiment:
             Ts3save = np.empty((Niter,))
         if runOpts.saveEntireImage:
             raw_img0 = thermalCamOut[3]
-            raw_img_save = np.empty((Niter, *raw_img0.shape))
+            gray_img = np.mean(raw_img0, axis=-1)
+            raw_img_save = np.empty((Niter, *gray_img.shape), dtype=np.uint8)
             print(raw_img_save.shape)
         if runOpts.saveSpectra:
             if specOut is not None:
