@@ -8,8 +8,9 @@ import numpy as np
 from utils.thermal_camera import *
 from utils.arduino import *
 
-async def async_measure(ard, prevTime, spec, runOpts):
-    '''
+
+async def async_measure(ard, osc, spec, runOpts):
+    """
     function to get measurements from all devices asynchronously to optimize
     time to get measurements
 
@@ -26,23 +27,27 @@ async def async_measure(ard, prevTime, spec, runOpts):
                 measurements, and the fourth (final) task gets embedded
                 measurements from the Arduino output
     runTime     run time to complete all tasks
-    '''
+    """
     # create list of tasks to complete asynchronously
-    tasks = [asyncio.create_task(async_get_temp(runOpts)),
-            asyncio.create_task(async_get_spectra(spec, runOpts)),
-            asyncio.create_task(async_get_emb(ard, prevTime, runOpts))]
+    tasks = [
+        asyncio.create_task(async_get_temp(runOpts)),
+        asyncio.create_task(async_get_spectra(spec, runOpts)),
+        asyncio.create_task(async_get_emb(ard, runOpts)),
+        asyncio.create_task(async_get_osc(osc, runOpts))
+    ]
 
     startTime = time.time()
     await asyncio.wait(tasks)
     # await asyncio.gather(*tasks)
     endTime = time.time()
-    runTime = endTime-startTime
+    runTime = endTime - startTime
     # print time to complete measurements
-    print('...completed data collection tasks after {} seconds'.format(runTime))
+    print("...completed data collection tasks after {} seconds".format(runTime))
     return tasks, runTime
 
+
 async def async_get_temp(runOpts):
-    '''
+    """
     asynchronous definition of surface temperature measurement. Assumes the
     camera device has already been initialized. Also can include spatial
     temperature measurements. If spatial temperatures are not desired, then the
@@ -58,7 +63,7 @@ async def async_get_temp(runOpts):
     Ts3     average spatial temperature from 12 pixels away from Ts in Celsius
     data    raw data matrix of the image captured
     if data collection is specified otherwise, outputs None
-    '''
+    """
     if runOpts.collectData:
         # run the data capture
         run = True
@@ -69,7 +74,7 @@ async def async_get_temp(runOpts):
                 print("No data read from thermal camera. Check connection.")
                 exit(1)
             # data is resized to the appropriate array size
-            data = cv2.resize(data[:,:], (640, 480))
+            data = cv2.resize(data[:, :], (640, 480))
             # get min and max values as well as their respective locations
             minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(data)
             # convert to Celsius (from Kelvin) with appropriate scaling
@@ -94,8 +99,9 @@ async def async_get_temp(runOpts):
     else:
         return None
 
+
 async def async_get_spectra(spec, runOpts):
-    '''
+    """
     asynchronous definition of optical emission spectra data
 
     Inputs:
@@ -107,8 +113,8 @@ async def async_get_spectra(spec, runOpts):
     intensitySpectrum    intensity spectrum
     wavelengths            wavelengths that correspond to the intensity spectrum
     if data collection is specified otherwise, outputs None
-    '''
-    if runOpts.collectData:
+    """
+    if runOpts.collectData and spec is not None:
         intensitySpectrum = spec.intensities()
         meanShift = np.mean(intensitySpectrum[-20:-1])
         intensitySpectrum = intensitySpectrum - meanShift
@@ -123,8 +129,9 @@ async def async_get_spectra(spec, runOpts):
     else:
         return None
 
-async def async_get_emb(dev, prevTime, runOpts):
-    '''
+
+async def async_get_emb(dev, runOpts, prevTime=0.0):
+    """
     asynchronous definition to get embedded measurements from the Arduino
     (microcontroller)
 
@@ -145,16 +152,16 @@ async def async_get_emb(dev, prevTime, runOpts):
     Dc            duty cycle
     elec        electrical measurements (embedded voltage and current)
     if data collection is specified otherwise, outputs None
-    '''
-    if runOpts.collectEmbedded:
+    """
+    if runOpts.collectEmbedded and dev is not None:
         # set default values for data/initialize data values
         Is = 0
-        U = [0,0,0]    # inputs (applied Voltage, frequency, flow rate)
+        U = [0, 0, 0]  # inputs (applied Voltage, frequency, flow rate)
         x_pos = 0
         y_pos = 0
         dsep = 0
         T_emb = 0
-        elec = [0,0]    # electrical measurements (embedded voltage and current)
+        elec = [0, 0]  # electrical measurements (embedded voltage and current)
         P_emb = 0
         Pset = 0
         Dc = 0
@@ -165,31 +172,31 @@ async def async_get_emb(dev, prevTime, runOpts):
             try:
                 # dev.reset_input_buffer()
                 # dev.readline()
-                line = dev.readline().decode('ascii')
+                line = dev.readline().decode("ascii")
                 if is_line_valid(line):
                     # print(line)
-                    data = line.split(',')
+                    data = line.split(",")
                     timeStamp = float(data[0])
                     if True:
-                    # if (timeStamp-prevTime)/1e3 >= runOpts.tSampling-0.025:
+                        # if (timeStamp-prevTime)/1e3 >= runOpts.tSampling-0.025:
                         run = False
                         # data read from line indexed as programmed on the Arduino
-                        V = float(data[1])    # p2p Voltage
-                        f = float(data[2])    # frequency
-                        q = float(data[3])    # Helium flow rate
-                        dsep = float(data[4])    # Z position
-                        Dc = float(data[5])    # duty cycle
-                        Is = float(data[6])    # embedded intensity
-                        V_emb = float(data[7])    # embedded voltage
-                        T_emb = float(data[8])    # embedded temperature
-                        I_emb = float(data[9])    # embedded current
-                        x_pos = float(data[10])    # X position
-                        y_pos = float(data[11])    # Y position
+                        V = float(data[1])  # p2p Voltage
+                        f = float(data[2])  # frequency
+                        q = float(data[3])  # Helium flow rate
+                        dsep = float(data[4])  # Z position
+                        Dc = float(data[5])  # duty cycle
+                        Is = float(data[6])  # embedded intensity
+                        V_emb = float(data[7])  # embedded voltage
+                        T_emb = float(data[8])  # embedded temperature
+                        I_emb = float(data[9])  # embedded current
+                        x_pos = float(data[10])  # X position
+                        y_pos = float(data[11])  # Y position
                         # q2 = float(data[12])        # Oxygen flow rate
-                        Pset = float(data[13])    # power setpoint
-                        P_emb = float(data[14])    # embedded power
+                        Pset = float(data[13])  # power setpoint
+                        P_emb = float(data[14])  # embedded power
 
-                        U = [V,f,q]
+                        U = [V, f, q]
                         elec = [V_emb, I_emb]
                 else:
                     print("CRC8 failed. Invalid line!")
@@ -198,6 +205,28 @@ async def async_get_emb(dev, prevTime, runOpts):
                 pass
         print(line)
         # print('embedded measurement done!')
-        return np.array([timeStamp, Is,*U,x_pos,y_pos,dsep,T_emb,P_emb,Pset,Dc,*elec])
+        return np.array(
+            [timeStamp, Is, *U, x_pos, y_pos, dsep, T_emb, P_emb, Pset, Dc, *elec]
+        )
+    else:
+        return None
+
+
+async def async_get_osc(osc, runOpts):
+    """asynchronous definition to get embedded measurements from the Arduino
+    (microcontroller)
+
+    Inputs:
+    osc         custom object for oscilloscope
+    runOpts     run options
+
+    Outputs:
+    t            time vector for the data collected
+    ch_data      dictionary of data from each channel
+    if data collection is specified otherwise, outputs None
+    """
+    if runOpts.collectOscMeas and osc is not None:
+        t, ch_datas = osc.collect_data_streaming()
+        return [t, ch_datas]
     else:
         return None
