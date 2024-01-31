@@ -21,6 +21,7 @@ import numpy as np
 import time
 from datetime import datetime
 import os
+import json
 
 ## import user functions
 from utils.run_options import RunOpts
@@ -208,8 +209,7 @@ class Experiment:
         if runOpts.saveEntireImage:
             raw_img0 = thermalCamOut[3]
             raw_img_save = np.empty((Niter, *raw_img0.shape))
-            img0 = thermalCamOut[4]
-            img_save = np.empty((Niter, *img0.shape))
+            print(raw_img_save.shape)
         if runOpts.saveSpectra:
             if specOut is not None:
                 waveSave = np.empty((Niter, len(specOut[2])))
@@ -223,7 +223,8 @@ class Experiment:
         if runOpts.saveOscMeas:
             if oscOut is not None:
                 n_channels = len(oscOut[1])
-                oscSave = [np.empty((Niter + 1, len(oscOut[0]))) for _ in n_channels]
+                oscSave = [np.empty((Niter + 1, len(oscOut[0]))) for _ in range(n_channels)]
+                print(oscSave[0].shape)
             else:
                 print("Oscilloscope data not collected! Nothing to save.")
                 runOpts.saveOscMeas = False
@@ -250,7 +251,6 @@ class Experiment:
                 Ts2 = thermalCamMeasure[1]
                 Ts3 = thermalCamMeasure[2]
                 raw_img = thermalCamMeasure[3]
-                img = thermalCamMeasure[4]
             else:
                 print(
                     "Temperature data not collected! Thermal Camera measurements will be set to -300."
@@ -284,7 +284,6 @@ class Experiment:
                 Ts3save[i] = Ts3
             if runOpts.saveEntireImage:
                 raw_img_save[i, :, :] = raw_img
-                img_save[i, :, :] = img
             # Intensity spectra (row 1: wavelengths; row 2: intensities; row 3: mean value used to shift spectra)
             if runOpts.saveSpectra:
                 waveSave[i, :] = np.ravel(wavelengths)
@@ -293,7 +292,7 @@ class Experiment:
             # Oscilloscope
             if runOpts.saveOscMeas:
                 oscOut = tasks[2].result()
-                for c in n_channels:
+                for c in range(n_channels):
                     if i == 0:
                         oscSave[c][i, :] = np.ravel(oscOut[0])
                     oscSave[c][i + 1, :] = np.ravel(oscOut[1][c]["data"])
@@ -333,31 +332,32 @@ class Experiment:
 
         # create dictionary of experimental data
         exp_data = {}
-        exp_data["Tsave"] = Tsave
-        exp_data["Isave"] = Isave
-        exp_data["Psave"] = power_seq
-        exp_data["qSave"] = flow_seq
+        exp_data["Tsave"] = Tsave.tolist()
+        exp_data["Isave"] = Isave.tolist()
+        exp_data["Psave"] = power_seq.tolist()
+        exp_data["qSave"] = flow_seq.tolist()
         exp_data["badTimes"] = badTimes
         if runOpts.collectSpatialTemp:
-            exp_data["Ts2save"] = Ts2save
-            exp_data["Ts3save"] = Ts3save
+            exp_data["Ts2save"] = Ts2save.tolist()
+            exp_data["Ts3save"] = Ts3save.tolist()
         if runOpts.saveEntireImage:
-            exp_data["raw_img_save"] = raw_img_save
-            exp_data["img_save"] = img_save
+            exp_data["raw_img_save"] = raw_img_save.tolist()
         if runOpts.collectEntireSpectra:
-            exp_data["waveSave"] = waveSave
-            exp_data["specSave"] = specSave
-            exp_data["meanShiftSave"] = meanShiftSave
+            exp_data["waveSave"] = waveSave.tolist()
+            exp_data["specSave"] = specSave.tolist()
+            exp_data["meanShiftSave"] = meanShiftSave.tolist()
         if runOpts.collectOscMeas:
-            exp_data["oscSave"] = oscSave
+            exp_data["oscSave"] = [o.tolist() for o in oscSave]
         if runOpts.collectEmbedded:
-            exp_data["ArdSave"] = ArdSave
+            exp_data["ArdSave"] = ArdSave.tolist()
         if opt_dict is not None:
             exp_data["opt_dict"] = opt_dict
 
-        # save experimental data to have a backup copy
-        self.exp_data = exp_data
-        np.save(self.backupSaveDir + "OL_data_" + str(self.ol_count) + ".npy", exp_data)
+        # # save experimental data dictionary as json to have a backup copy
+        # self.exp_data = exp_data
+        # with open(self.backupSaveDir+"OL_data_"+str(self.ol_count)+".json", 'w') as fp:
+        #     json.dump(exp_data, fp)
+        # print("saved JSON")
 
         # save separate files of each type of experimental data
         exp_saveDir = self.saveDir
@@ -385,10 +385,10 @@ def exp_data_saver(exp_data, saveDir, exp_name, runOpts):
     """
     if runOpts.saveData:
         # extract data
-        Tsave = exp_data["Tsave"]
-        Isave = exp_data["Isave"]
-        Psave = exp_data["Psave"]
-        qSave = exp_data["qSave"]
+        Tsave = np.array(exp_data["Tsave"])
+        Isave = np.array(exp_data["Isave"])
+        Psave = np.array(exp_data["Psave"])
+        qSave = np.array(exp_data["qSave"])
         badTimes = exp_data["badTimes"]
 
         dataHeader = "Ts (degC),I (a.u.),P (W),q (slm)"
@@ -412,12 +412,13 @@ def exp_data_saver(exp_data, saveDir, exp_name, runOpts):
             np.savetxt(
                 saveDir + exp_name + "_badMeasurementTimes.csv", badTimes, delimiter=","
             )
+        print("saved simple OL data")
 
     if runOpts.saveSpatialTemp:
         # extract data
-        Tsave = exp_data["Tsave"]
-        Ts2save = exp_data["Ts2save"]
-        Ts3save = exp_data["Ts3save"]
+        Tsave = np.array(exp_data["Tsave"])
+        Ts2save = np.array(exp_data["Ts2save"])
+        Ts3save = np.array(exp_data["Ts3save"])
 
         dataHeader = "Ts (degC),Ts2 (degC),Ts3 (degC)"
         saveArray = np.hstack(
@@ -430,29 +431,29 @@ def exp_data_saver(exp_data, saveDir, exp_name, runOpts):
             header=dataHeader,
             comments="",
         )
+        print("saved simple spatial temperature data")
 
     if runOpts.saveEntireImage:
         # extract data
-        raw_img_save = exp_data["raw_img_save"]
-        img_save = exp_data["img_save"]
+        raw_img_save = np.array(exp_data["raw_img_save"])
         print(
             "Whole thermal images are saved as n-dimensional NumPy arrays in a compressed .npz file.\n"
             + "The arrays may be accessed by using `numpy.load(file_name)`, which returns a NpzFile object.\n"
-            + "The NpzFile object can be accessed similar to a dictionary. The keys used to save the full thermal images are:\n"
-            + "'raw_data' for the raw image before the `raw_to_8bit` function and 'img' for the image after the `raw_to_8bit` function."
+            + "The NpzFile object can be accessed similar to a dictionary. The key used to save the full thermal images are:\n"
+            + "'raw_data' for the raw image before the `raw_to_8bit` function."
         )
 
         np.savez_compressed(
             saveDir + exp_name + "_dataCollectionThermalImages",
             raw_data=raw_img_save,
-            img=img_save,
         )
+        print("saved thermal image data")
 
     if runOpts.saveSpectra:
         # extract data
-        waveSave = exp_data["waveSave"]
-        specSave = exp_data["specSave"]
-        meanShiftSave = exp_data["meanShiftSave"]
+        waveSave = np.array(exp_data["waveSave"])
+        specSave = np.array(exp_data["specSave"])
+        meanShiftSave = np.array(exp_data["meanShiftSave"])
 
         print(
             "Entire spectra will be saved in a compressed .npz file with the following array variable names:\n"
@@ -467,10 +468,12 @@ def exp_data_saver(exp_data, saveDir, exp_name, runOpts):
             intensities=specSave,
             meanShifts=meanShiftSave,
         )
+        print("saved full optical emission spectra data")
 
     if runOpts.saveOscMeas:
         # extract data
-        oscSave = exp_data["oscSave"]
+        oscSave_list = exp_data["oscSave"]
+        oscSave = [np.array(o) for o in oscSave_list]
 
         print(
             "Oscilloscope output will be saved in a compressed .npz file with variable names corresponding to the channel at which the data was collected:\n"
@@ -507,9 +510,11 @@ def exp_data_saver(exp_data, saveDir, exp_name, runOpts):
         else:
             print("too many channels!")
 
+        print("saved oscilloscope data")
+
     if runOpts.saveEmbMeas:
         # extract data
-        ArdSave = exp_data["ArdSave"]
+        ArdSave = np.array(exp_data["ArdSave"])
 
         dataHeader = "t_emb (ms),Isemb (a.u.),Vp2p (V),f (kHz),q (slm),x_pos (mm),y_pos (mm),dsep (mm),T_emb (K),P_emb (W),Pset (W),duty (%),V_emb (kV),I_emb (mA)"
         np.savetxt(
@@ -519,6 +524,8 @@ def exp_data_saver(exp_data, saveDir, exp_name, runOpts):
             header=dataHeader,
             comments="",
         )
+
+        print("saved arduino serial output")
 
     print("\n\nData saved in the following directory:")
     print(saveDir)

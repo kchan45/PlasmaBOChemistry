@@ -225,11 +225,11 @@ def getSurfaceTemperature(save_spatial=False, save_image=False):
     Ts3 = get_avg_spatial_temp(n_offset2, data, maxLoc)
 
     if save_spatial and save_image:
-        return Ts_max, (Ts2, Ts3), (data, img)
+        return Ts_max, (Ts2, Ts3), data
     elif save_spatial:
         return Ts_max, (Ts2, Ts3)
     elif save_image:
-        return Ts_max, (data, img)
+        return Ts_max, data
     else:
         return Ts_max
 

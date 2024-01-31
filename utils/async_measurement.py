@@ -32,8 +32,8 @@ async def async_measure(ard, osc, spec, runOpts):
     tasks = [
         asyncio.create_task(async_get_temp(runOpts)),
         asyncio.create_task(async_get_spectra(spec, runOpts)),
+        asyncio.create_task(async_get_osc(osc, runOpts)),
         asyncio.create_task(async_get_emb(ard, runOpts)),
-        asyncio.create_task(async_get_osc(osc, runOpts))
     ]
 
     startTime = time.time()
@@ -68,34 +68,11 @@ async def async_get_temp(runOpts):
         # run the data capture
         run = True
         while run:
-            # image data is processed in a Queue
-            data = q.get(True, 500)
-            if data is None:
-                print("No data read from thermal camera. Check connection.")
-                exit(1)
-            # data is resized to the appropriate array size
-            data = cv2.resize(data[:, :], (640, 480))
-            # get min and max values as well as their respective locations
-            minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(data)
-            # convert to Celsius (from Kelvin) with appropriate scaling
-            Ts = ktoc(maxVal)
-
-            if runOpts.collectSpatialTemp:
-                # get offset values of surface temperature
-                # 2 pixels away
-                n_offset1 = 2
-                Ts2 = get_avg_spatial_temp(n_offset1, data, maxLoc)
-
-                # 12 pixels away
-                n_offset2 = 12
-                Ts3 = get_avg_spatial_temp(n_offset2, data, maxLoc)
-            else:
-                Ts2 = -300
-                Ts3 = -300
-
+            Ts_max, Ts_spatial, img_data = getSurfaceTemperature(True, True)
             run = False
         # print('temperature measurement done!')
-        return [Ts, Ts2, Ts3, data]
+        # return [Ts, Ts2, Ts3, data]
+        return [Ts_max, *Ts_spatial, img_data]
     else:
         return None
 

@@ -48,8 +48,8 @@ if __name__=="__main__":
 
     # let APPJ run for a bit
     time.sleep(2)
-    ard.sendInputsArduino(arduinoPI, 2.0, 1.5, dutyCycleIn, arduinoAddress)
-    ard.sendInputsArduino(arduinoPI, 2.0, 1.5, dutyCycleIn, arduinoAddress)
+    ard.sendInputsArduino(arduinoPI, 2.0, 2.0, dutyCycleIn, arduinoAddress)
+    ard.sendInputsArduino(arduinoPI, 2.0, 2.0, dutyCycleIn, arduinoAddress)
     time.sleep(2)
 
     print("Waiting 15 minutes to warm up the plasma jet...\n")

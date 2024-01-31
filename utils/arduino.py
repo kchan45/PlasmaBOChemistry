@@ -13,11 +13,11 @@ def sendInputsArduino(arduino, appliedPower, flow, dutyCycle, arduinoAddress):
     arduino.reset_input_buffer()
     # Send input values to the microcontroller to actuate them
     subprocess.run('echo "p,{:.2f}" > '.format(dutyCycle) + arduinoAddress, shell=True) #firmware v14
-    time.sleep(0.5)
+    time.sleep(0.2)
     subprocess.run('echo "w,{:.2f}" > '.format(appliedPower) + arduinoAddress, shell=True) #firmware v14
-    time.sleep(0.5)
+    time.sleep(0.2)
     subprocess.run('echo "q,{:.2f}" > '.format(flow) + arduinoAddress, shell=True)
-    time.sleep(0.5)
+    time.sleep(0.2)
     outString = "Input values: Power: %.2f, Flow: %.2f, Duty Cycle: %.2f" %(appliedPower,flow,dutyCycle)
     print(outString)
 

@@ -47,20 +47,14 @@ from picoscope_setup import *
 
 plot_data = True  # [True/False] whether or not to plot the (2-input, 2-output) data after an experiment
 
-data_file_label_default = "OL_multistep"
+data_file_label_default = "OL_multistep_TEST"
 step_length_default = 30.0  # time to run experiment in seconds
-P_max_default = 5.0  # max power setting for the treatment in Watts
+P_max_default = 3.25  # max power setting for the treatment in Watts
 P_min_default = 1.5  # min power setting for the treatment in Watts
-q_max_default = (
-    7.0  # max flow setting for the treatment in standard liters per minute (SLM)
-)
-q_min_default = (
-    2.0  # min flow setting for the treatment in standard liters per minute (SLM)
-)
-dist_treat_default = 4.0  # jet-to-substrate distance in mm
-int_time_default = (
-    12000 * 6
-)  # integration time for spectrometer measurement in microseconds
+q_max_default = 6.25  # max flow setting for the treatment in standard liters per minute (SLM)
+q_min_default = 2.0  # min flow setting for the treatment in standard liters per minute (SLM)
+dist_treat_default = 5.0  # jet-to-substrate distance in mm
+int_time_default = 12000 * 6  # integration time for spectrometer measurement in microseconds
 ts_default = 1.0  # sampling time to take measurements in seconds
 # NOTE: sampling time should be greater than integration time by roughly double
 
@@ -71,7 +65,7 @@ parser = argparse.ArgumentParser(description="Experiment Settings")
 parser.add_argument(
     "-f",
     "--file_label",
-    type=int,
+    type=str,
     default=data_file_label_default,
     help="The extra string to append to the save file.",
 )
@@ -163,7 +157,7 @@ if ts < 2 * int_time_treat * 1e-6:
     )
     exit(1)
 
-cfm = input("Confirm these are correct: [Y/n]\n")
+cfm = input("Confirm these are correct [Y/n]: ")
 if cfm in ["Y", "y"]:
     pass
 else:
@@ -246,7 +240,7 @@ devices["spec"] = spec
 
 # send startup inputs
 time.sleep(2)
-ard_utils.sendInputsArduino(arduinoPI, powerIn, flowIn, dutyCycleIn, arduinoAddress)
+ard_utils.sendInputsArduino(arduinoPI, 2.0, 2.0, dutyCycleIn, arduinoAddress)
 input("Ensure plasma has ignited and press Return to begin.\n")
 
 ## Startup asynchronous measurement
@@ -290,29 +284,25 @@ s = time.time()
 uvec1 = np.arange(start=P_min, stop=P_max, step=0.25)  # for power
 uvec2 = np.arange(start=q_min, stop=q_max, step=0.25)  # for flow rate
 uu1, uu2 = np.meshgrid(uvec1, uvec2)
-uvec1 = uu1.reshape(
-    -1,
-)
-uvec2 = uu2.reshape(
-    -1,
-)
+uvec1 = uu1.reshape(-1,)
+uvec2 = uu2.reshape(-1,)
 rng = np.random.default_rng(0)
 rng.shuffle(uvec1)
 pseq = np.copy(uvec1)
-pseq = np.insert(pseq, 0, [0.0, 2.5, 2.5, 2.5])
+p_nom = (P_max+P_min)/2
+pseq = np.insert(pseq, 0, [0.0, p_nom, p_nom, p_nom])
 rng.shuffle(uvec2)
 qseq = np.copy(uvec2)
-qseq = np.insert(qseq, 0, [0.0, 3.0, 3.0, 3.0])
+q_nom = (q_max+q_min)/2
+qseq = np.insert(qseq, 0, [0.0, q_nom, q_nom, q_nom])
 print(pseq)
 print(qseq)
 n_steps = int(step_length / runOpts.tSampling)
+pseq = [0.0, 2.0]
+qseq = [0.0, 2.0]
 
-pseq = np.repeat(pseq, n_steps).reshape(
-    -1,
-)
-qseq = np.repeat(qseq, n_steps).reshape(
-    -1,
-)
+pseq = np.repeat(pseq, n_steps).reshape(-1,)
+qseq = np.repeat(qseq, n_steps).reshape(-1,)
 print(pseq.shape[0])
 
 Nsim = len(pseq)
