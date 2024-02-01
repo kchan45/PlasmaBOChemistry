@@ -12,6 +12,7 @@ crc8 = crcmod.predefined.mkCrcFun('crc-8-maxim')
 def sendInputsArduino(arduino, appliedPower, flow, dutyCycle, arduinoAddress):
     arduino.reset_input_buffer()
     # Send input values to the microcontroller to actuate them
+    time.sleep(0.2)
     subprocess.run('echo "p,{:.2f}" > '.format(dutyCycle) + arduinoAddress, shell=True) #firmware v14
     time.sleep(0.2)
     subprocess.run('echo "w,{:.2f}" > '.format(appliedPower) + arduinoAddress, shell=True) #firmware v14
@@ -24,6 +25,7 @@ def sendInputsArduino(arduino, appliedPower, flow, dutyCycle, arduinoAddress):
 def sendControlledInputsArduino(arduino, appliedPower, flow, arduinoAddress):
     arduino.reset_input_buffer()
     # Send input values to the microcontroller to actuate them
+    time.sleep(0.05)
     subprocess.run('echo "w,{:.2f}" > '.format(appliedPower) + arduinoAddress, shell=True) #firmware v14
     time.sleep(0.05)
     subprocess.run('echo "q,{:.2f}" > '.format(flow) + arduinoAddress, shell=True)

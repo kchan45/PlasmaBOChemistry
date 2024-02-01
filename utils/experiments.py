@@ -425,6 +425,10 @@ def exp_data_saver(exp_data, saveDir, exp_name, runOpts):
     timeStamp is the time stamp identifier of the series of experiments
     runOpts is a class that defines the run options used during the experiment
     """
+    # make directory for segregated data
+    if not os.path.exists(saveDir + exp_name):
+        os.makedirs(saveDir + exp_name, exist_ok=True)
+        
     if runOpts.saveData:
         s = time.time()
         # extract data
@@ -445,7 +449,7 @@ def exp_data_saver(exp_data, saveDir, exp_name, runOpts):
             )
         )
         np.savetxt(
-            saveDir + exp_name + "_inputOutputData.csv",
+            saveDir + exp_name + "/inputOutputData.csv",
             saveArray,
             delimiter=",",
             header=dataHeader,
@@ -453,7 +457,7 @@ def exp_data_saver(exp_data, saveDir, exp_name, runOpts):
         )
         if badTimes:
             np.savetxt(
-                saveDir + exp_name + "_badMeasurementTimes.csv", badTimes, delimiter=","
+                saveDir + exp_name + "/badMeasurementTimes.csv", badTimes, delimiter=","
             )
         print(f"> saved simple OL data, took {time.time()-s} seconds")
 
@@ -469,7 +473,7 @@ def exp_data_saver(exp_data, saveDir, exp_name, runOpts):
             (Tsave.reshape(-1, 1), Ts2save.reshape(-1, 1), Ts3save.reshape(-1, 1))
         )
         np.savetxt(
-            saveDir + exp_name + "_dataCollectionSpatialTemps.csv",
+            saveDir + exp_name + "/dataCollectionSpatialTemps.csv",
             saveArray,
             delimiter=",",
             header=dataHeader,
@@ -492,7 +496,7 @@ def exp_data_saver(exp_data, saveDir, exp_name, runOpts):
             + "---> Please use a Python script and numpy.load(file_name) to load this data."
         )
         np.savez_compressed(
-            saveDir + exp_name + "_dataCollectionSpectra",
+            saveDir + exp_name + "/dataCollectionSpectra",
             wavelengths=waveSave,
             intensities=specSave,
             meanShifts=meanShiftSave,
@@ -513,25 +517,25 @@ def exp_data_saver(exp_data, saveDir, exp_name, runOpts):
 
         if len(oscSave) == 1:
             np.savez_compressed(
-                saveDir + exp_name + "_dataCollectionOscilloscope",
+                saveDir + exp_name + "/dataCollectionOscilloscope",
                 chA=oscSave[0],
             )
         elif len(oscSave) == 2:
             np.savez_compressed(
-                saveDir + exp_name + "_dataCollectionOscilloscope",
+                saveDir + exp_name + "/dataCollectionOscilloscope",
                 chA=oscSave[0],
                 chB=oscSave[1],
             )
         elif len(oscSave) == 3:
             np.savez_compressed(
-                saveDir + exp_name + "_dataCollectionOscilloscope",
+                saveDir + exp_name + "/dataCollectionOscilloscope",
                 chA=oscSave[0],
                 chB=oscSave[1],
                 chC=oscSave[2],
             )
         elif len(oscSave) == 4:
             np.savez_compressed(
-                saveDir + exp_name + "_dataCollectionOscilloscope",
+                saveDir + exp_name + "/dataCollectionOscilloscope",
                 chA=oscSave[0],
                 chB=oscSave[1],
                 chC=oscSave[2],
@@ -549,7 +553,7 @@ def exp_data_saver(exp_data, saveDir, exp_name, runOpts):
 
         dataHeader = "t_emb (ms),Isemb (a.u.),Vp2p (V),f (kHz),q (slm),x_pos (mm),y_pos (mm),dsep (mm),T_emb (K),P_emb (W),Pset (W),duty (%),V_emb (kV),I_emb (mA)"
         np.savetxt(
-            saveDir + exp_name + "_dataCollectionEmbedded.csv",
+            saveDir + exp_name + "/dataCollectionEmbedded.csv",
             ArdSave,
             delimiter=",",
             header=dataHeader,
@@ -569,6 +573,7 @@ def exp_data_saver(exp_data, saveDir, exp_name, runOpts):
         raw_img_save_files = exp_data["raw_img_save_files"]
         mmap_opts = exp_data["mmap_opts"]
         mmap_opts["dtype"] = DTypes[mmap_opts["dtype"]].value
+        mmap_opts["shape"] = tuple(mmap_opts["shape"])
         Niter = exp_data["Niter"]
         del exp_data
 

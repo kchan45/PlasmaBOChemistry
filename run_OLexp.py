@@ -41,15 +41,17 @@ from picoscope_setup import *
 
 plot_data = True  # [True/False] whether or not to plot the (2-input, 2-output) data after an experiment
 
-data_file_label_default = "OL_multistep_DRY_RUN"
+data_file_label_default = "OL_multistep_LONG"
 step_length_default = 30.0  # time to run experiment in seconds
 P_max_default = 3.25  # max power setting for the treatment in Watts
 P_min_default = 1.5  # min power setting for the treatment in Watts
-q_max_default = 6.25  # max flow setting for the treatment in standard liters per minute (SLM)
-q_min_default = 2.0  # min flow setting for the treatment in standard liters per minute (SLM)
+P_step_default = 0.25 # step size of power in Watts
+q_max_default = 6.5  # max flow setting for the treatment in standard liters per minute (SLM)
+q_min_default = 2.5  # min flow setting for the treatment in standard liters per minute (SLM)
+q_step_default = 0.5 # step size of flow rate in standard liters per minute
 dist_treat_default = 5.0  # jet-to-substrate distance in mm
 int_time_default = 12000 * 6  # integration time for spectrometer measurement in microseconds
-ts_default = 0.5  # sampling time to take measurements in seconds
+ts_default = 1.0  # sampling time to take measurements in seconds
 # NOTE: sampling time should be greater than integration time by roughly double
 
 ################################################################################
@@ -85,6 +87,13 @@ parser.add_argument(
     help="The minimum power setting for the treatment in Watts.",
 )
 parser.add_argument(
+    "-ps",
+    "--P_step",
+    type=float,
+    default=P_step_default,
+    help="The step size of the power setting for the treatment in Watts.",
+)
+parser.add_argument(
     "-qx",
     "--q_max",
     type=float,
@@ -97,6 +106,13 @@ parser.add_argument(
     type=float,
     default=q_min_default,
     help="The minimum flow rate setting for the treatment in SLM.",
+)
+parser.add_argument(
+    "-qs",
+    "--q_step",
+    type=float,
+    default=q_step_default,
+    help="The step size of the flow rate setting for the treatment in SLM.",
 )
 parser.add_argument(
     "-d",
@@ -125,8 +141,10 @@ file_label = args.file_label
 step_length = args.step_length
 P_max = args.P_max
 P_min = args.P_min
+P_step = args.P_step
 q_max = args.q_max
 q_min = args.q_min
+q_step = args.q_step
 dist_treat = args.dist_treat
 int_time_treat = args.int_time_treat
 ts = args.sampling_time
@@ -137,8 +155,10 @@ settings_str = (
     f"Step Length (s):            {step_length}\n"
     f"Max Power (W):              {P_max}\n"
     f"Min Power (W):              {P_min}\n"
+    f"Power Step (W):             {P_step}\n"
     f"Max Flow Rate (SLM):        {q_max}\n"
     f"Min Flow Rate (SLM):        {q_min}\n"
+    f"Flow Rate Step (SLM):       {q_step}\n"
     f"Separation Distance (mm):   {dist_treat}\n"
     f"Integration Time (us):      {int_time_treat}\n"
     f"Sampling Time (s):          {ts}\n"
@@ -275,8 +295,8 @@ s = time.time()
 ## Begin Experiment:
 ################################################################################
 # create input sequences
-uvec1 = np.arange(start=P_min, stop=P_max, step=0.5)  # for power
-uvec2 = np.arange(start=q_min, stop=q_max, step=0.5)  # for flow rate
+uvec1 = np.arange(start=P_min, stop=P_max, step=P_step)  # for power
+uvec2 = np.arange(start=q_min, stop=q_max, step=q_step)  # for flow rate
 uu1, uu2 = np.meshgrid(uvec1, uvec2)
 uvec1 = uu1.reshape(-1,)
 uvec2 = uu2.reshape(-1,)
@@ -326,13 +346,13 @@ if plot_data:
     import matplotlib.pyplot as plt
 
     fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(8, 8), dpi=150)
-    ax1.plot(exp_data["Tsave"])
+    ax1.plot(exp_data["Tsave"][step_length:])
     ax1.set_ylabel("Maximum Surface\nTemperature ($^\circ$C)")
-    ax2.plot(exp_data["Isave"])
+    ax2.plot(exp_data["Isave"][step_length:])
     ax2.set_ylabel("Total Optical\nEmission Intensity\n(arb. units)")
-    ax3.plot(exp_data["Psave"])
+    ax3.plot(exp_data["Psave"][step_length:])
     ax3.set_ylabel("Power (W)")
-    ax4.plot(exp_data["qSave"])
+    ax4.plot(exp_data["qSave"][step_length:])
     ax4.set_ylabel("Carrier Gas\nFlow Rate (SLM)")
     ax4.set_xlabel("Time Step")
     plt.tight_layout()
