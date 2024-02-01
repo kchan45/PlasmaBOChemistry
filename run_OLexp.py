@@ -26,12 +26,6 @@ import os
 import serial
 from datetime import datetime
 import asyncio
-
-# pickle import to save class data
-try:
-    import cPickle as pickle
-except ModuleNotFoundError:
-    import pickle
 import argparse
 
 ## import user functions
