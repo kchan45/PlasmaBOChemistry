@@ -10,3 +10,4 @@ pyvisa
 python-usbtmc
 pyusb
 crcmod
+h5py

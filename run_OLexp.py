@@ -47,7 +47,7 @@ from picoscope_setup import *
 
 plot_data = True  # [True/False] whether or not to plot the (2-input, 2-output) data after an experiment
 
-data_file_label_default = "OL_multistep_TEST"
+data_file_label_default = "OL_multistep_DRY_RUN"
 step_length_default = 30.0  # time to run experiment in seconds
 P_max_default = 3.25  # max power setting for the treatment in Watts
 P_min_default = 1.5  # min power setting for the treatment in Watts
@@ -55,7 +55,7 @@ q_max_default = 6.25  # max flow setting for the treatment in standard liters pe
 q_min_default = 2.0  # min flow setting for the treatment in standard liters per minute (SLM)
 dist_treat_default = 5.0  # jet-to-substrate distance in mm
 int_time_default = 12000 * 6  # integration time for spectrometer measurement in microseconds
-ts_default = 0.4  # sampling time to take measurements in seconds
+ts_default = 0.5  # sampling time to take measurements in seconds
 # NOTE: sampling time should be greater than integration time by roughly double
 
 ################################################################################
@@ -307,8 +307,8 @@ Nsim = len(pseq)
 
 exp = Experiment(Nsim, saveDir)
 
-f = open(saveDir + "notes.txt", "a")
-f.write(settings_str)
+with open(saveDir + "notes.txt", "a") as f:
+    f.write(settings_str)
 
 # additional information to save
 opt_dict = {}
@@ -348,5 +348,6 @@ print(
     "Experiment complete!\n"
     + "################################################################################################################\n"
     + "IF FINISHED WITH EXPERIMENTS, PLEASE FOLLOW THE SHUT-OFF PROCEDURE FOR THE APPJ\n"
+    + "REMEMBER TO SAVE OR TRANSFER A COPY OF THE DATA TO YOUR PERSONAL DEVICE!\n"
     + "################################################################################################################\n"
 )
