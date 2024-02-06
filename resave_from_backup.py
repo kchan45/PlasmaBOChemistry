@@ -7,8 +7,9 @@ from utils.run_options import RunOpts
 import json
 
 plot_data = True
-save_folder = "/home/mesbahappj/Desktop/PlasmaBOChemistry-ExperimentalData/2024_02_01_11h04m59s_OL_multistep_SHORT"
-
+# save_folder = "/home/mesbahappj/Desktop/PlasmaBOChemistry-ExperimentalData/2024_02_01_11h04m59s_OL_multistep_SHORT"
+# save_folder = "/home/mesbahappj/Desktop/PlasmaBOChemistry-ExperimentalData/2024_02_01_13h14m12s_OL_multistep_LONG"
+save_folder = "/home/mesbahappj/Desktop/PlasmaBOChemistry-ExperimentalData/2024_02_05_18h20m01s_OL_multistep_SHORT"
 
 # copy from settings used during data collection
 runOpts = RunOpts()

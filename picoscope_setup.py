@@ -9,7 +9,7 @@ import ctypes
 pretrigger_size = 2000  # size of the data buffer before the trigger, default is 2000, in units of samples
 posttrigger_size = 8000  # size of the data buffer after the trigger, default is 8000, in units of samples
 # for streaming mode, you may wish to change the following:
-single_buffer_size = 100  # size of a single buffer, default is 500
+single_buffer_size = 1000  # size of a single buffer, default is 500
 n_buffers = 1  # number of buffers to acquire, default is 10
 timebase = 127  # 2 corresponds to 4 ns; 127 # 127 corresponds to 1 us
 
@@ -33,7 +33,7 @@ channelA = {
     "name": "A",
     "enable_status": 1,
     "coupling_type": ps.PS2000A_COUPLING["PS2000A_DC"],
-    "range": ps.PS2000A_RANGE["PS2000A_5V"],
+    "range": ps.PS2000A_RANGE["PS2000A_10V"],
     "analog_offset": 0.0,
 }
 
@@ -48,7 +48,7 @@ channelC = {
     "name": "C",
     "enable_status": 1,
     "coupling_type": ps.PS2000A_COUPLING["PS2000A_DC"],
-    "range": ps.PS2000A_RANGE["PS2000A_20MV"],
+    "range": ps.PS2000A_RANGE["PS2000A_10V"],
     "analog_offset": 0.0,
 }
 channelD = {

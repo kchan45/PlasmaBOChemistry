@@ -405,8 +405,8 @@ class Oscilloscope():
         '''
         # Begin streaming mode:
         # sampleInterval = ctypes.c_int32(sInterval)
-        sampleInterval = ctypes.c_int32(100)
-        sampleUnits = ps.PS2000A_TIME_UNITS['PS2000A_US']
+        sampleInterval = ctypes.c_int32(250)
+        sampleUnits = ps.PS2000A_TIME_UNITS['PS2000A_NS']
         # We are not triggering:
         maxPreTriggerSamples = 0
         autoStopOn = 1

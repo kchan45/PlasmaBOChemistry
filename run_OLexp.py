@@ -346,13 +346,14 @@ if plot_data:
     import matplotlib.pyplot as plt
 
     fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(8, 8), dpi=150)
-    ax1.plot(exp_data["Tsave"][step_length:])
+
+    ax1.plot(exp_data["Tsave"][n_steps:])
     ax1.set_ylabel("Maximum Surface\nTemperature ($^\circ$C)")
-    ax2.plot(exp_data["Isave"][step_length:])
+    ax2.plot(exp_data["Isave"][n_steps:])
     ax2.set_ylabel("Total Optical\nEmission Intensity\n(arb. units)")
-    ax3.plot(exp_data["Psave"][step_length:])
+    ax3.plot(exp_data["Psave"][n_steps:])
     ax3.set_ylabel("Power (W)")
-    ax4.plot(exp_data["qSave"][step_length:])
+    ax4.plot(exp_data["qSave"][n_steps:])
     ax4.set_ylabel("Carrier Gas\nFlow Rate (SLM)")
     ax4.set_xlabel("Time Step")
     plt.tight_layout()
