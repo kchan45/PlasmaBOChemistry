@@ -9,7 +9,9 @@ import json
 plot_data = True
 # save_folder = "/home/mesbahappj/Desktop/PlasmaBOChemistry-ExperimentalData/2024_02_01_11h04m59s_OL_multistep_SHORT"
 # save_folder = "/home/mesbahappj/Desktop/PlasmaBOChemistry-ExperimentalData/2024_02_01_13h14m12s_OL_multistep_LONG"
-save_folder = "/home/mesbahappj/Desktop/PlasmaBOChemistry-ExperimentalData/2024_02_05_18h20m01s_OL_multistep_SHORT"
+# save_folder = "/home/mesbahappj/Desktop/PlasmaBOChemistry-ExperimentalData/2024_02_05_18h20m01s_OL_multistep_SHORT"
+# save_folder = "/home/mesbahappj/Desktop/PlasmaBOChemistry-ExperimentalData/2024_02_06_16h19m42s_OL_multistep_SHORT"
+save_folder = "/home/mesbahappj/Desktop/PlasmaBOChemistry-ExperimentalData/2024_02_06_17h56m02s_OL_multistep_LONG"
 
 # copy from settings used during data collection
 runOpts = RunOpts()
@@ -31,7 +33,7 @@ with open(save_folder+"/Backup/OL_data_0.json") as f:
     exp_data = json.load(f)
 
 # save
-# exp_data_saver(exp_data, save_folder+"/", "OL_data_0", runOpts)
+exp_data_saver(exp_data, save_folder+"/", "OL_data_0", runOpts)
 
 
 # plot
