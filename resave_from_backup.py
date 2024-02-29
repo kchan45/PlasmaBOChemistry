@@ -11,7 +11,8 @@ plot_data = True
 # save_folder = "/home/mesbahappj/Desktop/PlasmaBOChemistry-ExperimentalData/2024_02_01_13h14m12s_OL_multistep_LONG"
 # save_folder = "/home/mesbahappj/Desktop/PlasmaBOChemistry-ExperimentalData/2024_02_05_18h20m01s_OL_multistep_SHORT"
 # save_folder = "/home/mesbahappj/Desktop/PlasmaBOChemistry-ExperimentalData/2024_02_06_16h19m42s_OL_multistep_SHORT"
-save_folder = "/home/mesbahappj/Desktop/PlasmaBOChemistry-ExperimentalData/2024_02_06_17h56m02s_OL_multistep_LONG"
+# save_folder = "/home/mesbahappj/Desktop/PlasmaBOChemistry-ExperimentalData/2024_02_06_17h56m02s_OL_multistep_LONG"
+save_folder = "/home/mesbahappj/Desktop/PlasmaBOChemistry-ExperimentalData/2024_02_28_14h47m22s-Sample10"
 
 # copy from settings used during data collection
 runOpts = RunOpts()
@@ -26,7 +27,7 @@ runOpts.saveSpectra = True
 runOpts.saveOscMeas = True
 runOpts.saveSpatialTemp = False  # limited functionality
 runOpts.saveEntireImage = True
-runOpts.tSampling = 1.0  # set the sampling time of the measurements
+runOpts.tSampling = 0.5  # set the sampling time of the measurements
 
 # grab exp_data saved in backup
 with open(save_folder+"/Backup/OL_data_0.json") as f:

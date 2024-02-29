@@ -30,6 +30,8 @@ from utils.run_options import RunOpts
 import utils.async_measurement as ameas
 import utils.arduino as ard
 
+N_PER_BAT_FILE = 200
+
 
 def ctok(T):
     """
@@ -226,9 +228,9 @@ class Experiment:
         if runOpts.saveEntireImage:
             raw_img0 = thermalCamOut[3]
             # create dictionary of options for memmap to use
-            mmap_opts = {"dtype": np.uint8, "shape": (1000, *raw_img0.shape)}
+            mmap_opts = {"dtype": np.uint8, "shape": (N_PER_BAT_FILE, *raw_img0.shape)}
             # create list of memmap file names
-            raw_img_save_files = [self.backupSaveDir + f"tmp_img_data{n}.dat" for n in range(int(np.ceil(Niter/1000)))]
+            raw_img_save_files = [self.backupSaveDir + f"tmp_img_data{n}.dat" for n in range(int(np.ceil(Niter/N_PER_BAT_FILE)))]
             raw_img_save = None
         if runOpts.saveSpectra:
             if specOut is not None:
@@ -305,15 +307,15 @@ class Experiment:
                 Ts2save[i] = Ts2
                 Ts3save[i] = Ts3
             if runOpts.saveEntireImage:
-                if np.mod(i, 1000) == 0:
-                    n = int(i/1000)
+                if np.mod(i, N_PER_BAT_FILE) == 0:
+                    n = int(i/N_PER_BAT_FILE)
                     del raw_img_save
                     raw_img_save = np.memmap(raw_img_save_files[n], mode="w+", **mmap_opts)
                 if len(raw_img.shape) == 2:
-                    raw_img_save[np.mod(i, 1000), :, :] = raw_img
+                    raw_img_save[np.mod(i, N_PER_BAT_FILE), :, :] = raw_img
                     # raw_img_save.flush()
                 elif len(raw_img.shape) == 3:
-                    raw_img_save[np.mod(i, 1000), :, :, :] = raw_img
+                    raw_img_save[np.mod(i, N_PER_BAT_FILE), :, :, :] = raw_img
                     # raw_img_save.flush()
             # Intensity spectra (row 1: wavelengths; row 2: intensities; row 3: mean value used to shift spectra)
             if runOpts.saveSpectra:
@@ -362,6 +364,7 @@ class Experiment:
         # shut off APPJ
         ard.sendInputsArduino(arduinoPI, 0.0, 0.0, 100.0, arduinoAddress)
 
+        raw_img_save = []
         del raw_img_save  # flush memory changes
 
         # create dictionary of experimental data
@@ -383,12 +386,22 @@ class Experiment:
             exp_data["waveSave"] = waveSave
             exp_data["specSave"] = specSave
             exp_data["meanShiftSave"] = meanShiftSave
+            waveSave = []
+            specSave = []
+            meanShiftSave = []
         if runOpts.collectOscMeas:
             exp_data["oscSave"] = [o.tolist() for o in oscSave]
+            oscSave = []
         if runOpts.collectEmbedded:
             exp_data["ArdSave"] = ArdSave
+            ArdSave = []
         if opt_dict is not None:
             exp_data["opt_dict"] = opt_dict
+
+        Tsave = []
+        Isave = []
+        power_seq = []
+        flow_seq = []
 
         # save experimental data dictionary as json to have a backup copy
         self.exp_data = exp_data
@@ -575,6 +588,7 @@ def exp_data_saver(exp_data, saveDir, exp_name, runOpts):
         mmap_opts["dtype"] = DTypes[mmap_opts["dtype"]].value
         mmap_opts["shape"] = tuple(mmap_opts["shape"])
         Niter = exp_data["Niter"]
+        exp_data = []
         del exp_data
 
         # make directory for thermal images
@@ -587,9 +601,9 @@ def exp_data_saver(exp_data, saveDir, exp_name, runOpts):
             n_images = mmap_opts["shape"][0]
         
             for i in range(n_images):
-                if (n*1000+i) <= Niter:
+                if (n*N_PER_BAT_FILE+i) <= Niter:
                     with h5py.File(
-                        saveDir + exp_name + f"/thermal_images/iter{n*1000+i}.h5", "w"
+                        saveDir + exp_name + f"/thermal_images/iter{n*N_PER_BAT_FILE+i}.h5", "w"
                     ) as f:
                         dataset = f.create_dataset(
                             "image",

@@ -40,7 +40,7 @@ from utils.experiments import Experiment
 from picoscope_setup import *
 
 ## import arg_parse parser
-from arg_parse import parser
+from arg_parse import multistep_parser as parser
 
 plot_data = True  # [True/False] whether or not to plot the (2-input, 2-output) data after an experiment
 
@@ -100,9 +100,7 @@ Nrep = 1
 runOpts = RunOpts()
 runOpts.collectData = True  # option to collect two-input, two-output data (power, flow rate); (max surface temperature, total intensity)
 runOpts.collectEntireSpectra = True  # option to collect full intensity spectra
-runOpts.collectOscMeas = (
-    True  # option to collect oscilloscope measurements (using PicoScope)
-)
+runOpts.collectOscMeas = True  # option to collect oscilloscope measurements (using PicoScope)
 runOpts.collectSpatialTemp = False  # option to collect spatial temperature (defined as temperature from 12 pixels away from max in the four cardinal directions)
 # save options; correspond to the collection (two-input, two-output data is always saved)
 runOpts.saveSpectra = True
@@ -179,9 +177,7 @@ tasks, runTime = ioloop.run_until_complete(
     ameas.async_measure(arduinoPI, osc, spec, runOpts)
 )
 print("measurement devices ready!")
-s = time.time()
 
-prevTime = (time.time() - s) * 1e3
 # get initial measurements
 tasks, runTime = ioloop.run_until_complete(
     ameas.async_measure(arduinoPI, osc, spec, runOpts)
@@ -258,7 +254,7 @@ if plot_data:
     fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(8, 8), dpi=150)
 
     ax1.plot(exp_data["Tsave"][n_steps:])
-    ax1.set_ylabel("Maximum Surface\nTemperature ($^\circ$C)")
+    ax1.set_ylabel("Maximum Surface \nTemperature ($^\circ$C)")
     ax2.plot(exp_data["Isave"][n_steps:])
     ax2.set_ylabel("Total Optical\nEmission Intensity\n(arb. units)")
     ax3.plot(exp_data["Psave"][n_steps:])
